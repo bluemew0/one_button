@@ -132,7 +132,6 @@ let player
 /**
  * @typedef {{
  * pos: Vector,
- * speed: number,
  * state: boolean
  * }} Item
  * 
@@ -156,8 +155,10 @@ let nextSpawnTicks;
 let items;
 let itemState;
 let speed;
-let rndPos;
+let rndAngle;
 let itemPos;
+let xIncrement;
+let yIncrement; 
 const center = vec(G.WIDTH/2, G.HEIGHT/2); // keeps track of the center?
 
 function update() {
@@ -168,51 +169,70 @@ function update() {
 		nextSpawnTicks = 0;
 		items = [];
 		playState = true;
-		speed = 1;
+		speed = 50; // lower is faster
 	}
-
-	color("black");
-	char(addWithCharCode("a", floor(ticks/10) % 4), player.pos);
-	// char(addWithCharCode("e", floor(ticks/10) % 4), player.pos);
-	// char(addWithCharCode("i", floor(ticks/10) % 4), player.pos);
 
 	nextSpawnTicks--;
+
 	// Item Spawning
 	if (nextSpawnTicks < 0) {
-		itemPos = [vec(0, 0), vec(0, G.HEIGHT), vec(G.WIDTH, 0), vec(G.WIDTH, G.HEIGHT)];
-		rndPos = itemPos[rndi(0, 4)];
-
 		if (rndi(0, 2)) itemState = true;
 		else itemState = false;
-		items.push({
-			pos: rndPos,
-			state: itemState,
-			speed: speed
-		});
-		nextSpawnTicks = rndi(120, 240) 
+		times(rndi(2, 15), (f) => {
+			rndAngle = (rnd(0, 2*PI));
+			itemPos = vec(75 + 75 * cos(rndAngle), 75 + 75 * sin(rndAngle));
+			items.push({
+				pos: itemPos,
+				state: itemState,
+			});
+		})
+		nextSpawnTicks = rndi(120, 180) / difficulty
 	}
-	// use push to add items to spawn array
-	// ex. items.push({typedef for object})
-	// can use nextSpawnTicks to help control how much is spawned at once
-	// needs to have a pos, state, 
 
-	remove(items, (i) => {
-		if (i.state) {
-			char(addWithCharCode("e", floor(ticks/10) % 4), i.pos);
-		} else {
-			char(addWithCharCode("i", floor(ticks/10) % 4), i.pos);
-		}
-	})
 	// remove(items, (i) => {}) will actually spawn the items and the function will do stuff like changing pos/moving items
 	// probably need to check item state to determine what to spawn
 
 	// Item Logic
-	if (input.isJustPressed) playState = !playState;
-	if (playState == true) {
-		// switch states of items to the opposite, use !
-		// need a way to access all item states at once
-	} else {
+	if (input.isJustReleased) playState = !playState;
 
+	if (playState) {
+		console.log(true)
+		remove(items, (i) => {
+			// need to figure out how to have a consistent rate
+			xIncrement = (75-i.pos.x)/speed;
+			yIncrement = (75-i.pos.y)/speed;
+			if (i.state) { // if true, spawns good item, if false, spawns bad item
+				char(addWithCharCode("i", floor(ticks/10) % 4), i.pos);
+			} else if (!i.state){
+				char(addWithCharCode("e", floor(ticks/10) % 4), i.pos);
+			}
+			if (i.pos.x != 75 && i.pos.y != 75) {
+				i.pos.x += xIncrement;
+				i.pos.y += yIncrement;
+			}
+		})
+	} else {
+		console.log(false)
+		remove(items, (i) => {
+			i.state = !i.state;
+			xIncrement = (75-i.pos.x)/speed; // for consistent speed rate
+			yIncrement = (75-i.pos.y)/speed;
+			if (i.state) { // if true, spawns good item, if false, spawns bad item
+				char(addWithCharCode("i", floor(ticks/10) % 4), i.pos);
+			} else {
+				char(addWithCharCode("e", floor(ticks/10) % 4), i.pos);
+			}
+			if (i.pos.x != 75 && i.pos.y != 75) {
+				i.pos.x += xIncrement;
+				i.pos.y += yIncrement;
+			}
+		})
 	};
+
+	color("black");
+	const c = addWithCharCode("a", floor(ticks/10) % 4);
+	if (char(c, center).isColliding.char.e || char(c, center).isColliding.char.f || char(c, center).isColliding.char.j || char(c, center).isColliding.char.h) {
+		console.log("");
+	}
 
 }
