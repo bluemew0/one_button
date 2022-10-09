@@ -8,7 +8,7 @@ characters = [
 `
  llll 
 llllll
-lcllcl
+lbllbl
 llllll
 llllll
 llll
@@ -16,7 +16,7 @@ llll
 `
  llll 
 llllll
-lcllcl
+lbllbl
 llllll
 llllll
   llll
@@ -24,7 +24,7 @@ llllll
 `
  llll 
 llllll
-lcllcl
+lbllbl
 llllll
 llllll
 l  lll
@@ -32,7 +32,7 @@ l  lll
 `
  llll 
 llllll
-lcllcl
+lbllbl
 llllll
 llllll
 lll  l
@@ -193,46 +193,43 @@ function update() {
 	// probably need to check item state to determine what to spawn
 
 	// Item Logic
-	if (input.isJustReleased) playState = !playState;
-
-	if (playState) {
-		console.log(true)
-		remove(items, (i) => {
-			// need to figure out how to have a consistent rate
-			xIncrement = (75-i.pos.x)/speed;
-			yIncrement = (75-i.pos.y)/speed;
-			if (i.state) { // if true, spawns good item, if false, spawns bad item
-				char(addWithCharCode("i", floor(ticks/10) % 4), i.pos);
-			} else if (!i.state){
-				char(addWithCharCode("e", floor(ticks/10) % 4), i.pos);
-			}
-			if (i.pos.x != 75 && i.pos.y != 75) {
-				i.pos.x += xIncrement;
-				i.pos.y += yIncrement;
-			}
-		})
-	} else {
-		console.log(false)
-		remove(items, (i) => {
-			i.state = !i.state;
-			xIncrement = (75-i.pos.x)/speed; // for consistent speed rate
-			yIncrement = (75-i.pos.y)/speed;
-			if (i.state) { // if true, spawns good item, if false, spawns bad item
-				char(addWithCharCode("i", floor(ticks/10) % 4), i.pos);
-			} else {
-				char(addWithCharCode("e", floor(ticks/10) % 4), i.pos);
-			}
-			if (i.pos.x != 75 && i.pos.y != 75) {
-				i.pos.x += xIncrement;
-				i.pos.y += yIncrement;
-			}
-		})
-	};
-
-	color("black");
-	const c = addWithCharCode("a", floor(ticks/10) % 4);
-	if (char(c, center).isColliding.char.e || char(c, center).isColliding.char.f || char(c, center).isColliding.char.j || char(c, center).isColliding.char.h) {
-		console.log("");
+	if (input.isJustReleased) {
+		playState = !playState;
+		console.log(playState);
 	}
+	const c = addWithCharCode("a", floor(ticks/10) % 4);
+
+	remove(items, (i) => {
+		xIncrement = (75-i.pos.x)/speed; // for consistent speed rate towards center
+ 		yIncrement = (75-i.pos.y)/speed;
+		if (playState) {
+			if (i.state) char(addWithCharCode("i", floor(ticks/10) % 4), i.pos);
+			else if (!i.state) char(addWithCharCode("e", floor(ticks/10) % 4), i.pos);
+		} else {
+			if (i.state) char(addWithCharCode("e", floor(ticks/10) % 4), i.pos);
+			else if (!i.state) char(addWithCharCode("i", floor(ticks/10) % 4), i.pos);
+		}
+		if (i.pos.x != 75 && i.pos.y != 75) { // movement
+			i.pos.x += xIncrement;
+			i.pos.y += yIncrement;
+		}
+
+		return (73 < i.pos.x && i.pos.x < 78 && 73 < i.pos.y && i.pos.y < 78);
+	})
+
+
+	if (char(c, center).isColliding.char.i || char(c, center).isColliding.char.j || char(c, center).isColliding.char.k || char(c, center).isColliding.char.l) {
+		play("coin");
+		score++;
+	}
+
+	if (char(c, center).isColliding.char.e || char(c, center).isColliding.char.f || char(c, center).isColliding.char.g || char(c, center).isColliding.char.h) {
+		play("select");
+		score--;
+	}
+
+	// if (score < 0) {
+	// 	end();
+	// }
 
 }
