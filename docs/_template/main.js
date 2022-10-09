@@ -159,77 +159,95 @@ let rndAngle;
 let itemPos;
 let xIncrement;
 let yIncrement; 
+let radius;
 const center = vec(G.WIDTH/2, G.HEIGHT/2); // keeps track of the center?
 
 function update() {
-	if (!ticks) { // Init
+	if (!ticks) { 
+		// Initiate
 		player = {
-			pos: vec(G.WIDTH/2, G.HEIGHT/2),
+			pos: center,
 		};
 		nextSpawnTicks = 0;
 		items = [];
 		playState = true;
-		speed = 50; // lower is faster
+		speed = 60; // lower is faster
+		radius = 80;
 	}
+
+	// Player Movement
+	player.pos.y += sin(2*PI);
 
 	nextSpawnTicks--;
 
-	// Item Spawning
+	// Item Spawn Timing and Position
 	if (nextSpawnTicks < 0) {
 		if (rndi(0, 2)) itemState = true;
 		else itemState = false;
 		times(rndi(2, 15), (f) => {
 			rndAngle = (rnd(0, 2*PI));
-			itemPos = vec(75 + 75 * cos(rndAngle), 75 + 75 * sin(rndAngle));
+			itemPos = vec(player.pos.x + radius * cos(rndAngle), player.pos.y + radius * sin(rndAngle));
 			items.push({
 				pos: itemPos,
 				state: itemState,
 			});
 		})
-		nextSpawnTicks = rndi(120, 180) / difficulty
+		nextSpawnTicks = rndi(40, 120) / difficulty
 	}
 
-	// remove(items, (i) => {}) will actually spawn the items and the function will do stuff like changing pos/moving items
-	// probably need to check item state to determine what to spawn
+	color("light_yellow");
+	arc(player.pos, 13, 1);
+	// text("O", center.x, center.y);
+	color("black");
 
-	// Item Logic
-	if (input.isJustReleased) {
+	// Item Logic and Spawning
+	if (input.isJustPressed) {
 		playState = !playState;
-		console.log(playState);
 	}
 	const c = addWithCharCode("a", floor(ticks/10) % 4);
+	char(c, center);
 
 	remove(items, (i) => {
-		xIncrement = (75-i.pos.x)/speed; // for consistent speed rate towards center
- 		yIncrement = (75-i.pos.y)/speed;
+		xIncrement = (player.pos.x-i.pos.x)/speed; // for consistent speed rate towards center
+ 		yIncrement = (player.pos.x-i.pos.y)/speed;
+		let x;
 		if (playState) {
-			if (i.state) char(addWithCharCode("i", floor(ticks/10) % 4), i.pos);
-			else if (!i.state) char(addWithCharCode("e", floor(ticks/10) % 4), i.pos);
+			if (i.state) {
+				x = char(addWithCharCode("i", floor(ticks/10) % 4), i.pos).isColliding.rect.light_yellow;
+				if (x) {
+					score++;
+					play("coin");
+				}
+			}
+			else if (!i.state) {
+				x = char(addWithCharCode("e", floor(ticks/10) % 4), i.pos).isColliding.rect.light_yellow;
+				if (x) {
+					play("hit");
+					end();
+				}
+			}
 		} else {
-			if (i.state) char(addWithCharCode("e", floor(ticks/10) % 4), i.pos);
-			else if (!i.state) char(addWithCharCode("i", floor(ticks/10) % 4), i.pos);
+			if (i.state) {
+				x = char(addWithCharCode("e", floor(ticks/10) % 4), i.pos).isColliding.rect.light_yellow;
+				if (x) {
+					play("hit");
+					end();
+				}
+			} else if (!i.state) {
+				x = char(addWithCharCode("i", floor(ticks/10) % 4), i.pos).isColliding.rect.light_yellow;
+				if (x) {
+					score++;
+					play("coin");
+				}
+			}
 		}
-		if (i.pos.x != 75 && i.pos.y != 75) { // movement
+		// movement
+		if (i.pos.x != 75 && i.pos.y != 75) { 
 			i.pos.x += xIncrement;
 			i.pos.y += yIncrement;
 		}
 
-		return (73 < i.pos.x && i.pos.x < 78 && 73 < i.pos.y && i.pos.y < 78);
+		return (x);
 	})
-
-
-	if (char(c, center).isColliding.char.i || char(c, center).isColliding.char.j || char(c, center).isColliding.char.k || char(c, center).isColliding.char.l) {
-		play("coin");
-		score++;
-	}
-
-	if (char(c, center).isColliding.char.e || char(c, center).isColliding.char.f || char(c, center).isColliding.char.g || char(c, center).isColliding.char.h) {
-		play("select");
-		score--;
-	}
-
-	// if (score < 0) {
-	// 	end();
-	// }
 
 }
