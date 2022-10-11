@@ -3,7 +3,8 @@ title = "Playing with Fire";
 description = `
 Collect blue souls,
 
-avoid fire!
+avoid red fire!
+
 
 [TAP] Switch states
 
@@ -121,7 +122,7 @@ const G = {
 options = {
 	viewSize: vec(G.WIDTH, G.HEIGHT),
 	theme: "shapeDark",
-	seed: 990,
+	seed: 387,
 	isPlayingBgm: true,
 	isReplayEnabled: true
 };
@@ -208,7 +209,7 @@ function update() {
 	// Item Spawn Timing and Position
 	if (nextSpawnTicks < 0) {
 		if (rndi(0, 2)) itemState = true;
-		else itemState = false;
+		else itemState = false; 
 		times(rndi(2, 15), (f) => {
 			rndAngle = (rnd(0, 2*PI));
 			itemPos = vec(player.pos.x + radius * cos(rndAngle), player.pos.y + radius * sin(rndAngle));
@@ -218,7 +219,7 @@ function update() {
 				angle: rndAngle
 			});
 		})
-		nextSpawnTicks = rndi(40, 120) / difficulty
+		nextSpawnTicks = rndi(40, 100) / difficulty
 	}
 
 	color("yellow");
