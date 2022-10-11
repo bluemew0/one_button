@@ -210,7 +210,7 @@ function update() {
 	if (nextSpawnTicks < 0) {
 		if (rndi(0, 2)) itemState = true;
 		else itemState = false; 
-		times(rndi(2, 15), (f) => {
+		times(rndi(2, 12), (f) => {
 			rndAngle = (rnd(0, 2*PI));
 			itemPos = vec(player.pos.x + radius * cos(rndAngle), player.pos.y + radius * sin(rndAngle));
 			items.push({
