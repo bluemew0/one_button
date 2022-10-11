@@ -1,6 +1,12 @@
-title = "";
+title = "Playing with Fire";
 
 description = `
+Collect blue souls,
+
+avoid fire!
+
+[TAP] Switch states
+
 `;
 
 characters = [
@@ -107,13 +113,15 @@ bbcbb
 
 const G = {
 	WIDTH: 150,
-	HEIGHT: 150
+	HEIGHT: 150,
+	STAR_SPEED_MIN: 0.5,
+	STAR_SPEED_MAX: 1.0
 }
 
 options = {
 	viewSize: vec(G.WIDTH, G.HEIGHT),
 	theme: "shapeDark",
-	seed: 78,
+	seed: 990,
 	isPlayingBgm: true,
 	isReplayEnabled: true
 };
@@ -132,7 +140,8 @@ let player
 /**
  * @typedef {{
  * pos: Vector,
- * state: boolean
+ * state: boolean,
+ * angle: number
  * }} Item
  * 
  * @type { Item }
@@ -160,6 +169,7 @@ let itemPos;
 let xIncrement;
 let yIncrement; 
 let radius;
+let stars;
 const center = vec(G.WIDTH/2, G.HEIGHT/2); // keeps track of the center?
 
 function update() {
@@ -173,10 +183,25 @@ function update() {
 		playState = true;
 		speed = 60; // lower is faster
 		radius = 80;
+
+		// Star background init
+		stars = times(20, () => {
+			const posX = rnd(0, G.WIDTH);
+			const posY = rnd(0, G.HEIGHT);
+			return {
+				pos: vec(posX, posY),
+				speed: rnd(G.STAR_SPEED_MIN, G.STAR_SPEED_MAX)
+			}
+		})
 	}
 
-	// Player Movement
-	player.pos.y += sin(2*PI);
+	// Star background
+	stars.forEach((s) => {
+		s.pos.y += s.speed;
+		s.pos.wrap(0, G.WIDTH, 0, G.HEIGHT);
+		color("light_yellow");
+		box(s.pos, 1);
+	});
 
 	nextSpawnTicks--;
 
@@ -190,12 +215,13 @@ function update() {
 			items.push({
 				pos: itemPos,
 				state: itemState,
+				angle: rndAngle
 			});
 		})
 		nextSpawnTicks = rndi(40, 120) / difficulty
 	}
 
-	color("light_yellow");
+	color("yellow");
 	arc(player.pos, 13, 1);
 	// text("O", center.x, center.y);
 	color("black");
@@ -205,36 +231,48 @@ function update() {
 		playState = !playState;
 	}
 	const c = addWithCharCode("a", floor(ticks/10) % 4);
-	char(c, center);
+	char(c, player.pos.x, player.pos.y);
 
 	remove(items, (i) => {
 		xIncrement = (player.pos.x-i.pos.x)/speed; // for consistent speed rate towards center
- 		yIncrement = (player.pos.x-i.pos.y)/speed;
+ 		yIncrement = (player.pos.y-i.pos.y)/speed;
 		let x;
 		if (playState) {
 			if (i.state) {
-				x = char(addWithCharCode("i", floor(ticks/10) % 4), i.pos).isColliding.rect.light_yellow;
+				color("black");
+				x = char(addWithCharCode("i", floor(ticks/10) % 4), i.pos).isColliding.rect.yellow;
+				color("light_blue");
+				particle(i.pos, 1, 1, i.angle, 0.3);
 				if (x) {
 					score++;
 					play("coin");
 				}
 			}
 			else if (!i.state) {
-				x = char(addWithCharCode("e", floor(ticks/10) % 4), i.pos).isColliding.rect.light_yellow;
+				color("black");
+				x = char(addWithCharCode("e", floor(ticks/10) % 4), i.pos).isColliding.rect.yellow;
+				color("light_red");
+				particle(i.pos, 1, 1, i.angle, 0.3);
 				if (x) {
-					play("hit");
+					play("hit");  
 					end();
 				}
 			}
 		} else {
 			if (i.state) {
-				x = char(addWithCharCode("e", floor(ticks/10) % 4), i.pos).isColliding.rect.light_yellow;
+				color("black");
+				x = char(addWithCharCode("e", floor(ticks/10) % 4), i.pos).isColliding.rect.yellow;
+				color("light_red");
+				particle(i.pos, 1, 1, i.angle, 0.3);
 				if (x) {
 					play("hit");
 					end();
 				}
 			} else if (!i.state) {
-				x = char(addWithCharCode("i", floor(ticks/10) % 4), i.pos).isColliding.rect.light_yellow;
+				color("black");
+				x = char(addWithCharCode("i", floor(ticks/10) % 4), i.pos).isColliding.rect.yellow;
+				color("light_blue");
+				particle(i.pos, 1, 1, i.angle, 0.3);
 				if (x) {
 					score++;
 					play("coin");
@@ -246,6 +284,8 @@ function update() {
 			i.pos.x += xIncrement;
 			i.pos.y += yIncrement;
 		}
+
+		
 
 		return (x);
 	})
